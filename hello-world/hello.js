@@ -4,7 +4,7 @@ module.exports.handler = async (event) => {
 
     if (event.queryStringParameters && event.queryStringParameters['Name']) {
       responseMessage = 'Hello, ' + event.queryStringParameters['Name'] + '!';
-    }
+      }
   
     return {
       statusCode: 200,

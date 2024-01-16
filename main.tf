@@ -1,5 +1,24 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.23.1"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5.1"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4.0"
+    }
+  }
+
+  required_version = "~> 1.2"
+}
+
 provider "aws" {
-  region = var.aws_region
+  region = "eu-central-1"
 
   default_tags {
     tags = {
@@ -54,7 +73,7 @@ resource "aws_lambda_function" "hello_world" {
   s3_bucket = aws_s3_bucket.lambda_bucket.id
   s3_key    = aws_s3_object.lambda_hello_world.key
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs18.x"
   handler = "hello.handler"
 
   source_code_hash = data.archive_file.lambda_hello_world.output_base64sha256
@@ -135,6 +154,20 @@ resource "aws_apigatewayv2_route" "hello_world" {
   target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
 }
 
+resource "aws_apigatewayv2_route" "hello_world" {
+  api_id = aws_apigatewayv2_api.lambda.id
+
+  route_key = "GET /health"
+  target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
+}
+
+resource "aws_apigatewayv2_route" "save_to_dynamodb" {
+  api_id = aws_apigatewayv2_api.lambda.id
+
+  route_key = "POST /save"
+  target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
+}
+
 resource "aws_cloudwatch_log_group" "api_gw" {
   name = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
 
@@ -148,4 +181,13 @@ resource "aws_lambda_permission" "api_gw" {
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_apigatewayv2_api.lambda.execution_arn}/*/*"
+}
+
+resource "aws_dynamodb_table" "flamur_table" {
+  name           = "flamur_table"
+  hash_key       = "id"
+  attribute {
+    name = "id"
+    type = "S"
+  }
 }
