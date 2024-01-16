@@ -150,13 +150,6 @@ resource "aws_apigatewayv2_integration" "hello_world" {
 resource "aws_apigatewayv2_route" "hello_world" {
   api_id = aws_apigatewayv2_api.lambda.id
 
-  route_key = "GET /hello"
-  target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
-}
-
-resource "aws_apigatewayv2_route" "hello_world" {
-  api_id = aws_apigatewayv2_api.lambda.id
-
   route_key = "GET /health"
   target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
 }
@@ -190,4 +183,7 @@ resource "aws_dynamodb_table" "flamur_table" {
     name = "id"
     type = "S"
   }
+    billing_mode = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
 }
